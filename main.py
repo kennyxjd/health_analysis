@@ -1,9 +1,10 @@
 import os
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 import logging
-
+from typing import Callable
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -87,10 +88,8 @@ class CalHealth:
 
         return "No matching health result found."
 
-
 app = FastAPI()
 calhealth = CalHealth("./data/health")
-
 
 class HealthCheckRequest(BaseModel):
     age: int
@@ -98,10 +97,16 @@ class HealthCheckRequest(BaseModel):
     gender: str
     weight: float
 
+@app.middleware("http")
+async def log_request_middleware(request: Request, call_next: Callable):
+    body = await request.body()
+    logger.info(f"Request body: {body.decode('utf-8')}")
+    response = await call_next(request)
+    return response
 
 @app.post("/health-check")
-def health_check(request: HealthCheckRequest):
-    logger.info(f"=" * 70)
+async def health_check(request: HealthCheckRequest):
+    logger.info("=" * 70)
     logger.info(f"Received health check request: {request}")
     try:
         result = calhealth.search_health_result(
@@ -117,11 +122,9 @@ def health_check(request: HealthCheckRequest):
         return {"health_status": result}
     except ValidationError as e:
         logger.error(f"Validation error: {e}")
+        logger.error(f"Validation error details: {e.errors()}")
         raise HTTPException(status_code=422, detail=e.errors())
-
-
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
