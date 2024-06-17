@@ -2,7 +2,12 @@ import os
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import logging
 
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class CalHealth:
     def __init__(self, folder_path) -> None:
@@ -96,6 +101,8 @@ class HealthCheckRequest(BaseModel):
 
 @app.post("/health-check")
 def health_check(request: HealthCheckRequest):
+    logger.info(f"=" * 70)
+    logger.info(f"Received health check request: {request}")
     result = calhealth.search_health_result(
         age=request.age,
         height=request.height,
@@ -104,6 +111,7 @@ def health_check(request: HealthCheckRequest):
 
     if result == "No matching health result found.":
         raise HTTPException(status_code=404, detail=result)
+    logger.info(f"Health check result: {result}")
     return {"health_status": result}
 
 
