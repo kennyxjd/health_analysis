@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 import logging
 
 
@@ -103,16 +103,22 @@ class HealthCheckRequest(BaseModel):
 def health_check(request: HealthCheckRequest):
     logger.info(f"=" * 70)
     logger.info(f"Received health check request: {request}")
-    result = calhealth.search_health_result(
-        age=request.age,
-        height=request.height,
-        gender=request.gender,
-        weight=request.weight)
+    try:
+        result = calhealth.search_health_result(
+            age=request.age,
+            height=request.height,
+            gender=request.gender,
+            weight=request.weight)
 
-    if result == "No matching health result found.":
-        raise HTTPException(status_code=404, detail=result)
-    logger.info(f"Health check result: {result}")
-    return {"health_status": result}
+        if result == "No matching health result found.":
+            logger.warning(f"No matching health result found for request: {request}")
+            raise HTTPException(status_code=404, detail=result)
+        logger.info(f"Health check result: {result}")
+        return {"health_status": result}
+    except ValidationError as e:
+        logger.error(f"Validation error: {e}")
+        raise HTTPException(status_code=422, detail=e.errors())
+
 
 
 if __name__ == "__main__":
