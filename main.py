@@ -97,12 +97,12 @@ class HealthCheckRequest(BaseModel):
     gender: str
     weight: float
 
-@app.middleware("http")
-async def log_request_middleware(request: Request, call_next: Callable):
-    body = await request.body()
-    logger.info(f"Request body: {body.decode('utf-8')}")
-    response = await call_next(request)
-    return response
+# @app.middleware("http")
+# async def log_request_middleware(request: Request, call_next: Callable):
+#     body = await request.body()
+#     logger.info(f"Request body: {body.decode('utf-8')}")
+#     response = await call_next(request)
+#     return response
 
 @app.post("/health-check")
 async def health_check(request: HealthCheckRequest):
