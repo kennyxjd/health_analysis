@@ -131,7 +131,8 @@ async def health_check(request: HealthCheckRequest):
             logger.warning(f"No matching health result found for request: {request}")
             raise HTTPException(status_code=404, detail=result)
         logger.info(f"Health check result: {result}")
-        return result
+        return JSONResponse(content={"health_status": result})
+
     except ValidationError as e:
         logger.error(f"Validation error: {e}")
         logger.error(f"Validation error details: {e.errors()}")
