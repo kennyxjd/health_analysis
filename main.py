@@ -12,21 +12,25 @@ logger = logging.getLogger(__name__)
 
 class CalHealth:
     def __init__(self, folder_path) -> None:
+        self.range = dict()
         self.health_dict = self.load_csv_files(folder_path)
+        self.out_range_info = self.out_range_format()
 
     def load_csv_files(self, folder_path):
         health_dict = {}
+
         # Traverse through all files in the directory
         for file_name in os.listdir(folder_path):
             if file_name.endswith(".csv"):
                 file_path = os.path.join(folder_path, file_name)
                 age_range = self.extract_age_range(file_name)
+                height_list = []
                 df = pd.read_csv(file_path, skiprows=1)
-
                 if age_range not in health_dict:
                     health_dict[age_range] = dict()
                 for _, row in df.iterrows():
                     height = row.iloc[0]
+                    height_list.append(height)
                     info = {
                         "boy": {
                             "median_weight": row.iloc[1],
@@ -46,7 +50,15 @@ class CalHealth:
 
                     health_dict[age_range][height] = info
 
+                self.range[age_range] = [min(height_list), max(height_list)]
+
         return health_dict
+
+    def out_range_format(self):
+        out_range_info = "请按提示输入正确的年龄和身高范围 》 "
+        for age_range, height_range in self.range.items():
+            out_range_info += f"年龄范围：{age_range[0]}岁 - {age_range[1]}岁，身高范围：{height_range[0]}cm - {height_range[1]}cm  "
+        return out_range_info
 
     def extract_age_range(self, file_name):
         """Helper function to extract age range from file name like '3-5.csv'"""
@@ -86,7 +98,7 @@ class CalHealth:
                 weight_records = height_records[gender]
                 return self.determine_health_status(weight_records, weight)
 
-        return "No matching health result found."
+        return self.out_range_info
 
 app = FastAPI()
 calhealth = CalHealth("./data/health")
@@ -119,7 +131,7 @@ async def health_check(request: HealthCheckRequest):
             logger.warning(f"No matching health result found for request: {request}")
             raise HTTPException(status_code=404, detail=result)
         logger.info(f"Health check result: {result}")
-        return {"health_status": result}
+        return result
     except ValidationError as e:
         logger.error(f"Validation error: {e}")
         logger.error(f"Validation error details: {e.errors()}")
