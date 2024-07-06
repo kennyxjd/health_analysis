@@ -13,7 +13,7 @@ class CalNameHealth:
 
     def load_csv_name_files(self, file_path):
         health_name_dict = {}
-        df = pd.read_csv(file_path, skiprows=1, encoding='utf-8')
+        df = pd.read_csv(file_path, encoding='utf-8')
         for _, row in df.iterrows():
             health_name_dict[row.iloc[1]] = {'name': row.iloc[0],
                                              'gender': row.iloc[2],
