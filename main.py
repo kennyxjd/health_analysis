@@ -4,7 +4,6 @@
 # Author:kenny
 # @File:main.py
 
-import gradio as gr
 import uvicorn
 from fastapi import FastAPI
 
