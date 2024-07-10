@@ -97,7 +97,7 @@ class CalHealth:
             height_min, height_max = min(records.keys()), max(records.keys())
             if self.in_range(age, age_range):
                 if height not in records.keys():
-                    return f"{age}岁{gender_ch}的身高查询范围为{height_min} ~ {height_max}之间，请确认输入的数据。"
+                    return f"{age}岁{gender_ch}的身高查询范围为{height_min} ~ {height_max}cm之间，请确认输入的数据。"
                 height_records = records[height]
                 weight_records = height_records[gender]
                 return self.determine_health_status(weight_records, weight)
