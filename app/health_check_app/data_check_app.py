@@ -11,6 +11,7 @@ import pandas as pd
 class CalHealth:
     def __init__(self, folder_path) -> None:
         self.range = dict()
+        self.age_support = ''
         self.health_dict = self.load_csv_files(folder_path)
         self.out_range_info = self.out_range_format()
 
@@ -27,7 +28,7 @@ class CalHealth:
                 if age_range not in health_dict:
                     health_dict[age_range] = dict()
                 for _, row in df.iterrows():
-                    height = row.iloc[0]
+                    height = int(row.iloc[0])
                     height_list.append(height)
                     info = {
                         "boy": {
@@ -62,6 +63,7 @@ class CalHealth:
         """Helper function to extract age range from file name like '3-5.csv'"""
         base_name = os.path.splitext(file_name)[0]  # Remove the file extension
         min_age, max_age = map(int, base_name.split("-"))
+        self.age_support += f"{min_age}~{max_age}岁 "
         return min_age, max_age
 
     def in_range(self, value, range_tuple):
@@ -90,12 +92,17 @@ class CalHealth:
             return "过度肥胖"
 
     def search_health_result(self, age, height, gender, weight):
+        gender_ch = '男孩' if gender == 'boy' else '女孩'
         for age_range, records in self.health_dict.items():
+            height_min, height_max = min(records.keys()), max(records.keys())
             if self.in_range(age, age_range):
+                if height not in records.keys():
+                    return f"{age}岁{gender_ch}的身高查询范围为{height_min} ~ {height_max}之间，请确认输入的数据。"
                 height_records = records[height]
                 weight_records = height_records[gender]
                 return self.determine_health_status(weight_records, weight)
 
-        return self.out_range_info
+        # return self.out_range_info
+        return f"小朋友的年龄查询范围为：{self.age_support}"
 
 calhealth = CalHealth("./data/health")
